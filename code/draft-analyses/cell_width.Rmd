@@ -120,20 +120,25 @@ cell_dimensions_plot
 
 ## Images
 
-I am choosing an image on the following criteria: 1. xxx 2. xxx 3. ...
+I am choosing an image on the following criteria: 1. Reflection of cell size 2. Reflection of media condition.
 
 On the basis of this criteria, I will be illustrating the following image:
 
 ```{r}
 # Choose image
-from_experiment <- "../../data/intermediate/exp=membrane-permeabilization/"
-from_condition <- "detergent=digitonin_conc=0.02mmolar_minutes=1/"
-from_basename <- "date=2022-03-19_488=poc5_594=cnb_01_01.tif"
+from_experiment <- paste0("~/Documents/Stanford/Huang_lab_rotation/",
+                          "Chow_derived_media/240308_chow_media_comparisons/")
+from_condition <- "48hrs_snapshots/"
+from_BHIS <- "48hrs_ecoli_BHIS_1.tif"
+from_15chowSD7PB <- "48hrs_ecoli_15chowDS7(PB)_1.tif"
 
 # Copy paste to output directory
-from <- file.path(from_experiment, from_condition, from_basename)
-to <- file.path(dst_dirname, "example_image.tif")
+from <- file.path(from_experiment, from_condition, from_BHIS)
+from2 <- file.path(from_experiment, from_condition, from_15chowSD7PB)
+to <- file.path(dst_dir, "48hrs_BHIS.tif")
+to2 <- file.path(dst_dir, "48hrs_15chowSD7(PB).tif")
 file.copy(from, to)
+file.copy(from2, to2)
 ```
 
 ------------------------------------------------------------------------
