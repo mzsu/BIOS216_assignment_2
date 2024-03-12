@@ -85,7 +85,8 @@ cell_dimensions_long <- cell_dimensions_mod %>%
   )
 
 cell_dimensions_long$comb_SD <- cell_dimensions_long$width_SD
-cell_dimensions_long$comb_SD[seq(2, nrow(cell_dimensions_long), by = 2)] <- cell_dimensions_long$length_SD[seq(2, nrow(cell_dimensions_long), by = 2)]
+cell_dimensions_long$comb_SD[seq(2, nrow(cell_dimensions_long), by = 2)] <- 
+  cell_dimensions_long$length_SD[seq(2, nrow(cell_dimensions_long), by = 2)]
 
 cell_dimensions_long
 ```
@@ -105,13 +106,13 @@ cell_dimensions_plot <- cell_dimensions_long %>%
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, vjust=1, hjust=1))
 
-# Save
-#ggsave(
-  #file.path(dst_dirname, "48hrs_cell_dimensions.png"),
-  #cell_dimensions_plot,
-  #height = 4,
-  #width = 6
-#)
+# Save plot
+ggsave(
+  file.path(dst_dir, "48hrs_cell_dimensions.png"),
+  cell_dimensions_plot,
+  height = 4,
+  width = 6
+)
 
 # Print
 cell_dimensions_plot
