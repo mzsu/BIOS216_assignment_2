@@ -26,8 +26,9 @@ library(readxl)
 ```{r}
 # Source locations
 src_dir <- paste0("~/Documents/Stanford/Huang_lab_rotation/Chow_derived_media/",
-                  "240308_chow_media_comparisons/48hrs_snapshots/",
-                  "48hrs_cell_dimensions.xlsx")
+                  "240308_chow_media_comparisons/")
+
+src_dimensions <- "48hrs_snapshots/48hrs_cell_dimensions.xlsx"
 
 # Destination locations
 dst_dir <- paste0("~/Documents/Stanford/Huang_lab_rotation/Chow_derived_media/",
@@ -41,10 +42,12 @@ dst_dir <- paste0("~/Documents/Stanford/Huang_lab_rotation/Chow_derived_media/",
 
 ```{r}
 # Convert .xlsx files to readable .csv
-write.csv(read_excel(src_dir), "48hrs_cell_dimensions.csv", row.names = FALSE)
+write.csv(read_excel(paste0(src_dir, src_dimensions)), 
+          "48hrs_cell_dimensions.csv", row.names = FALSE)
 
 # Read all csv files and view output
 cell_dimensions_ <- read_csv("48hrs_cell_dimensions.csv")
+
 cell_dimensions_
 ```
 
@@ -95,7 +98,7 @@ cell_dimensions_long
 
 # Compute - Visualize
 
-## Histograms
+## Barplots
 
 ```{r}
 # Plot
@@ -117,6 +120,10 @@ ggsave(
 # Print
 cell_dimensions_plot
 ```
+
+------------------------------------------------------------------------
+
+# Compute - Visualize
 
 ## Images
 
