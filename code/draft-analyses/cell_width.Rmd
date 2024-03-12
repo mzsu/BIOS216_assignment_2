@@ -1,0 +1,210 @@
+---
+title: "Cell width: Draft analytics"
+author: "Morgan Su"
+date: "`r format(Sys.time(), '%a, %b %d, %Y')`"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+---
+
+# Setup
+
+## Imports
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(readr)
+library(tidyr)
+library(readxl)
+```
+
+## Parameters
+
+```{r}
+# Source locations
+src_dir <- paste0("~/Documents/Stanford/Huang_lab_rotation/Chow_derived_media/",
+                  "240308_chow_media_comparisons/48hrs_snapshots/",
+                  "48hrs_cell_dimensions.xlsx")
+
+# Destination locations
+dst_dir <- paste0("~/Documents/Stanford/Huang_lab_rotation/Chow_derived_media/",
+                  "240308_chow_media_comparisons/R_outputs/",
+                  "48hrs_cell_dimensions")
+```
+
+------------------------------------------------------------------------
+
+# Read
+
+```{r}
+# Convert .xlsx files to readable .csv
+write.csv(read_excel(src_dir), "48hrs_cell_dimensions.csv", row.names = FALSE)
+
+# Read all csv files and view output
+cell_dimensions_ <- read_csv("48hrs_cell_dimensions.csv")
+cell_dimensions_
+```
+
+------------------------------------------------------------------------
+
+# Conform
+
+Create file.
+
+```{r}
+cell_dimensions <- cell_dimensions_
+```
+
+------------------------------------------------------------------------
+
+# Compute - Describe
+
+Determine percentage difference in cell width compared to standard 1 um width.
+
+```{r}
+# Calculate SEs and percentages of BHIS standard and save as new columns.
+cell_dimensions_mod <- cell_dimensions %>%
+  mutate(
+    width_SE = width_SD / sqrt(num_cells),
+    length_SE = length_SD / sqrt(num_cells),
+    width_percent_BHIS = (cell_width - first(cell_width)) / 
+      first(cell_width)*100,
+    length_percent_BHIS = (cell_length - first(cell_length)) / 
+      first(cell_length)*100
+  )
+
+# Creates long form table to generate cluster plot
+cell_dimensions_long <- cell_dimensions_mod %>%
+  pivot_longer(
+    cols = c(width_percent_BHIS, length_percent_BHIS),
+    names_to = "parameter",
+    values_to = "percent_difference_of_BHIS"
+  )
+
+cell_dimensions_long$comb_SD <- cell_dimensions_long$width_SD
+cell_dimensions_long$comb_SD[seq(2, nrow(cell_dimensions_long), by = 2)] <- cell_dimensions_long$length_SD[seq(2, nrow(cell_dimensions_long), by = 2)]
+
+cell_dimensions_long
+```
+
+------------------------------------------------------------------------
+
+# Compute - Visualize
+
+## Histograms
+
+```{r}
+# Plot
+cell_dimensions_plot <- cell_dimensions_long %>%
+  ggplot(aes(x = media, y = percent_difference_of_BHIS, fill = parameter)) +
+  geom_col(position = "dodge") +
+  labs(y="percent of 1 um", title="48hrs cell dimensions") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust=1, hjust=1))
+
+# Save
+#ggsave(
+  #file.path(dst_dirname, "48hrs_cell_dimensions.png"),
+  #cell_dimensions_plot,
+  #height = 4,
+  #width = 6
+#)
+
+# Print
+cell_dimensions_plot
+```
+
+## Images
+
+I am choosing an image on the following criteria: 1. xxx 2. xxx 3. ...
+
+On the basis of this criteria, I will be illustrating the following image:
+
+```{r}
+# Choose image
+from_experiment <- "../../data/intermediate/exp=membrane-permeabilization/"
+from_condition <- "detergent=digitonin_conc=0.02mmolar_minutes=1/"
+from_basename <- "date=2022-03-19_488=poc5_594=cnb_01_01.tif"
+
+# Copy paste to output directory
+from <- file.path(from_experiment, from_condition, from_basename)
+to <- file.path(dst_dirname, "example_image.tif")
+file.copy(from, to)
+```
+
+------------------------------------------------------------------------
+
+# Compute - Analyze
+
+This is where you can compute any p-values.
+
+------------------------------------------------------------------------
+
+# Write
+
+```{r}
+```
+
+------------------------------------------------------------------------
+
+# Reproducibility
+
+## Linting and styling
+
+```{r}
+# Style current file
+styler::style_file(
+  path = rstudioapi::getSourceEditorContext()$path,
+  style = tidyverse_style
+)
+
+# Lint current file
+lintr::lint(rstudioapi::getSourceEditorContext()$path)
+```
+
+## Dependencies
+
+```{r}
+# Clean up project of libraries not in use
+renv::clean()
+
+# Update lock file with new packages
+renv::snapshot()
+```
+
+## Containerization
+
+```{r}
+# Only run this if option is set to TRUE
+if (UPDATE_DOCKERFILE) {
+  # Create a dockerfile from the session info
+  my_dockerfile <- containerit::dockerfile(from = sessionInfo(), env = ls())
+  # Write file
+  write(my_dockerfile, file = "~/Dockerfile")
+}
+
+print(my_dockerfile)
+```
+
+------------------------------------------------------------------------
+
+# Documentation
+
+## Session info
+
+```{r}
+print(sessionInfo(), locale = FALSE)
+```
+
+## References
+
+```{r}
+(.packages()) %>%
+  sort() %>%
+  lapply(citation) %>%
+  lapply(c) %>%
+  unique()
+```
