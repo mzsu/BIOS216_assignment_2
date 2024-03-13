@@ -145,12 +145,12 @@ from_experiment <- paste0(
   "Chow_derived_media/240308_chow_media_comparisons/"
 )
 from_condition <- "48hrs_snapshots/"
-from_BHIS <- "48hrs_ecoli_BHIS_1.tif"
-from_15chowSD7PB <- "48hrs_ecoli_15chowDS7(PB)_1.tif"
+from_bhis <- "48hrs_ecoli_BHIS_1.tif"
+from_15chowsd7pb <- "48hrs_ecoli_15chowDS7(PB)_1.tif"
 
 # Copy paste to output directory
-from <- file.path(from_experiment, from_condition, from_BHIS)
-from2 <- file.path(from_experiment, from_condition, from_15chowSD7PB)
+from <- file.path(from_experiment, from_condition, from_bhis)
+from2 <- file.path(from_experiment, from_condition, from_15chowsd7pb)
 to <- file.path(dst_dir, "48hrs_BHIS.tif")
 to2 <- file.path(dst_dir, "48hrs_15chowSD7(PB).tif")
 file.copy(from, to)

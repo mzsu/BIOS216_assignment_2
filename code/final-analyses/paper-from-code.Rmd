@@ -147,38 +147,45 @@ library(ggplot2)
 library(magrittr)
 library(readr)
 library(tidyr)
+library(readxl)
+library(styler)
 ```
 
-## Configurations
-
-Locations.
+## Parameters
 
 ```{r}
 # Source locations
-src_dirname <- "../../data/tidy/exp=membrane-permeabilization/"
-src_basename <- "2023-03-11.csv"
+src_dir <- paste0(
+  "~/Documents/Stanford/Huang_lab_rotation/Chow_derived_media/",
+  "240308_chow_media_comparisons/"
+)
+
+src_dimensions <- "48hrs_snapshots/48hrs_cell_dimensions.xlsx"
 
 # Destination locations
-dst_dirname <- "../../outputs/final/paper-from-code/"
+dst_dir <- paste0(
+  "~/Documents/Stanford/Huang_lab_rotation/Chow_derived_media/",
+  "240308_chow_media_comparisons/R_outputs/",
+  "48hrs_cell_dimensions"
+)
 ```
-
-Configurations.
-
-```{r}
-# Should the dockerfile be updated automatically?
-UPDATE_DOCKERFILE <- FALSE # nolint⁠
-```
-
 
 ------------------------------------------------------------------------
 
 # Read
 
 ```{r}
-# Read all csv files
-membrane_ <- read_csv(file.path(src_dirname, src_basename))
-```
+# Convert .xlsx files to readable .csv
+write.csv(read_excel(paste0(src_dir, src_dimensions)),
+  "48hrs_cell_dimensions.csv",
+  row.names = FALSE
+)
 
+# Read all csv files and view output
+cell_dimensions_ <- read_csv("48hrs_cell_dimensions.csv")
+
+cell_dimensions_
+```
 
 ------------------------------------------------------------------------
 
@@ -187,155 +194,110 @@ membrane_ <- read_csv(file.path(src_dirname, src_basename))
 Create file.
 
 ```{r}
-membrane <- membrane_
+cell_dimensions <- cell_dimensions_
 ```
-
 
 ------------------------------------------------------------------------
 
-# Text
+# Compute - Describe
 
-Compute difference between channels.
+Determine percentage difference in cell width compared to standard 1 um width.
 
 ```{r}
-# Create channel columns and difference
-wide <-
-  membrane %>%
-  pivot_wider(
-    id_cols = condition,
-    names_from = channel,
-    names_glue = "channel_{channel}",
-    values_from = mean_intensity
-  ) %>%
-  mutate(diffs = channel_1 - channel_2)
+# Calculate SEs and percentages of BHIS standard and save as new columns.
+cell_dimensions_mod <- cell_dimensions %>%
+  mutate(
+    width_SE = width_SD / sqrt(num_cells),
+    length_SE = length_SD / sqrt(num_cells),
+    width_percent_BHIS = (cell_width - first(cell_width)) /
+      first(cell_width) * 100,
+    length_percent_BHIS = (cell_length - first(cell_length)) /
+      first(cell_length) * 100
+  )
 
-# Compute mean in differences
-mean_diff <- wide %>%
-  pull(diffs) %>%
-  mean()
+# Creates long form table to generate cluster plot
+cell_dimensions_long <- cell_dimensions_mod %>%
+  pivot_longer(
+    cols = c(width_percent_BHIS, length_percent_BHIS),
+    names_to = "parameter",
+    values_to = "percent_difference_of_BHIS"
+  )
 
-# Print mean
-sprintf("Mean intensity difference in Channel 1 vs. 2 = %.1f units", mean_diff)
+cell_dimensions_long$comb_SD <- cell_dimensions_long$width_SD
+cell_dimensions_long$comb_SD[seq(2, nrow(cell_dimensions_long), by = 2)] <-
+  cell_dimensions_long$length_SD[seq(2, nrow(cell_dimensions_long), by = 2)]
+
+cell_dimensions_long
 ```
-
 
 ------------------------------------------------------------------------
 
-# Figures
+# Compute - Visualize
 
-## Figure 1
-
-### Panel a
+## Barplots
 
 ```{r}
 # Plot
-membrane_histogram <-
-  membrane %>%
-  mutate(channel = paste("Channel", channel)) %>%
-  ggplot(aes(x = mean_intensity, fill = channel, color = channel)) +
-  geom_histogram(alpha = 0.7) +
-  facet_wrap(vars(condition)) +
-  labs(x = "Mean intensity (units)", y = "Counts") +
+cell_dimensions_plot <- cell_dimensions_long %>%
+  ggplot(aes(x = media, y = percent_difference_of_BHIS, fill = parameter)) +
+  geom_col(position = "dodge") +
+  labs(y = "percent of 1 um", title = "48hrs cell dimensions") +
   theme_minimal() +
-  theme(
-    axis.title.x = element_text(vjust = -1),
-    axis.title.y = element_text(vjust = 3),
-    legend.title = element_blank()
-  )
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+# Save plot
+ggsave(
+  file.path(dst_dir, "48hrs_cell_dimensions.png"),
+  cell_dimensions_plot,
+  height = 4,
+  width = 6
+)
 
 # Print
-membrane_histogram
+cell_dimensions_plot
 ```
 
-### Panel b
+------------------------------------------------------------------------
 
-I am choosing an image on the following criteria:
+# Compute - Visualize
 
-1. xxx
-2. xxx
-3. ...
+## Images
+
+I am choosing an image on the following criteria: 1. Reflection of cell size 2. Reflection of media condition.
 
 On the basis of this criteria, I will be illustrating the following image:
 
 ```{r}
 # Choose image
-from_experiment <- "../../data/conformed/exp=membrane-permeabilization/"
-from_condition <- "detergent=digitonin_conc=0.02mmolar_minutes=1/"
-from_basename <- "date=2022-03-19_488=poc5_594=cnb_01_01.tif"
+from_experiment <- paste0(
+  "~/Documents/Stanford/Huang_lab_rotation/",
+  "Chow_derived_media/240308_chow_media_comparisons/"
+)
+from_condition <- "48hrs_snapshots/"
+from_bhis <- "48hrs_ecoli_BHIS_1.tif"
+from_15chowsd7pb <- "48hrs_ecoli_15chowDS7(PB)_1.tif"
 
 # Copy paste to output directory
-from <- file.path(from_experiment, from_condition, from_basename)
-to <- file.path(dst_dirname, "figure_1b.tif")
+from <- file.path(from_experiment, from_condition, from_bhis)
+from2 <- file.path(from_experiment, from_condition, from_15chowsd7pb)
+to <- file.path(dst_dir, "48hrs_BHIS.tif")
+to2 <- file.path(dst_dir, "48hrs_15chowSD7(PB).tif")
 file.copy(from, to)
+file.copy(from2, to2)
 ```
-
 
 ------------------------------------------------------------------------
 
-# Tables
+# Compute - Analyze
 
-```{r}
-```
-
+This is where you can compute any p-values.
 
 ------------------------------------------------------------------------
 
 # Write
 
-## Setup
-
-Create the necessary directories.
-
-```{r}
-# Get today's date
-today <- Sys.Date()
-today <- format(today, "%Y-%m-%d")
-
-# Create folder names
-base_folder <- file.path(dst_dirname)
-date_folder <- file.path(dst_dirname, today)
-csv_folder <- file.path(date_folder, "csv")
-pdf_folder <- file.path(date_folder, "pdf")
-html_folder <- file.path(date_folder, "html")
-
-# Create folders
-dir.create(base_folder)
-dir.create(date_folder)
-dir.create(csv_folder)
-dir.create(pdf_folder)
-dir.create(html_folder)
-
-# Print folder names
-print(base_folder)
-print(date_folder)
-print(csv_folder)
-print(pdf_folder)
-print(html_folder)
-```
-
-
-## Figures
-
-Write all figures.
-
-```{r}
-# Save
-ggsave(
-  file.path(dst_dirname, "paper-from-code_fig_1a.pdf"),
-  membrane_histogram,
-  height = 4,
-  width = 6
-)
-```
-
-
-## Tables
-
-Write all tables.
-
 ```{r}
 ```
-
 
 ------------------------------------------------------------------------
 
@@ -347,46 +309,41 @@ Write all tables.
 # Style current file
 styler::style_file(
   path = rstudioapi::getSourceEditorContext()$path,
-  style = styler::tidyverse_style
+  style = tidyverse_style
 )
 
 # Lint current file
 lintr::lint(rstudioapi::getSourceEditorContext()$path)
 ```
 
-
-## Dependency management
+## Dependencies
 
 ```{r}
 # Clean up project of libraries not in use
-# (use prompt = FALSE to avoid the interactive session)
-# (packages can only be removed in interactive mode b/c this is destructive)
-renv::clean(prompt = TRUE)
+renv::clean()
 
 # Update lock file with new packages
 renv::snapshot()
 ```
 
-
 ## Containerization
 
 ```{r}
+UPDATE_DOCKERFILE <- FALSE
+
 # Only run this if option is set to TRUE
 if (UPDATE_DOCKERFILE) {
   # Create a dockerfile from the session info
   my_dockerfile <- containerit::dockerfile(from = sessionInfo(), env = ls())
   # Write file
   write(my_dockerfile, file = "~/Dockerfile")
+  print(my_dockerfile)
 }
-
-print(my_dockerfile)
 ```
-
 
 ------------------------------------------------------------------------
 
 # Documentation
-
 
 ## Session info
 
