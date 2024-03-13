@@ -19,21 +19,26 @@ library(magrittr)
 library(readr)
 library(tidyr)
 library(readxl)
+library(styler)
 ```
 
 ## Parameters
 
 ```{r}
 # Source locations
-src_dir <- paste0("~/Documents/Stanford/Huang_lab_rotation/Chow_derived_media/",
-                  "240308_chow_media_comparisons/")
+src_dir <- paste0(
+  "~/Documents/Stanford/Huang_lab_rotation/Chow_derived_media/",
+  "240308_chow_media_comparisons/"
+)
 
 src_dimensions <- "48hrs_snapshots/48hrs_cell_dimensions.xlsx"
 
 # Destination locations
-dst_dir <- paste0("~/Documents/Stanford/Huang_lab_rotation/Chow_derived_media/",
-                  "240308_chow_media_comparisons/R_outputs/",
-                  "48hrs_cell_dimensions")
+dst_dir <- paste0(
+  "~/Documents/Stanford/Huang_lab_rotation/Chow_derived_media/",
+  "240308_chow_media_comparisons/R_outputs/",
+  "48hrs_cell_dimensions"
+)
 ```
 
 ------------------------------------------------------------------------
@@ -42,8 +47,10 @@ dst_dir <- paste0("~/Documents/Stanford/Huang_lab_rotation/Chow_derived_media/",
 
 ```{r}
 # Convert .xlsx files to readable .csv
-write.csv(read_excel(paste0(src_dir, src_dimensions)), 
-          "48hrs_cell_dimensions.csv", row.names = FALSE)
+write.csv(read_excel(paste0(src_dir, src_dimensions)),
+  "48hrs_cell_dimensions.csv",
+  row.names = FALSE
+)
 
 # Read all csv files and view output
 cell_dimensions_ <- read_csv("48hrs_cell_dimensions.csv")
@@ -73,10 +80,10 @@ cell_dimensions_mod <- cell_dimensions %>%
   mutate(
     width_SE = width_SD / sqrt(num_cells),
     length_SE = length_SD / sqrt(num_cells),
-    width_percent_BHIS = (cell_width - first(cell_width)) / 
-      first(cell_width)*100,
-    length_percent_BHIS = (cell_length - first(cell_length)) / 
-      first(cell_length)*100
+    width_percent_BHIS = (cell_width - first(cell_width)) /
+      first(cell_width) * 100,
+    length_percent_BHIS = (cell_length - first(cell_length)) /
+      first(cell_length) * 100
   )
 
 # Creates long form table to generate cluster plot
@@ -88,7 +95,7 @@ cell_dimensions_long <- cell_dimensions_mod %>%
   )
 
 cell_dimensions_long$comb_SD <- cell_dimensions_long$width_SD
-cell_dimensions_long$comb_SD[seq(2, nrow(cell_dimensions_long), by = 2)] <- 
+cell_dimensions_long$comb_SD[seq(2, nrow(cell_dimensions_long), by = 2)] <-
   cell_dimensions_long$length_SD[seq(2, nrow(cell_dimensions_long), by = 2)]
 
 cell_dimensions_long
@@ -105,9 +112,9 @@ cell_dimensions_long
 cell_dimensions_plot <- cell_dimensions_long %>%
   ggplot(aes(x = media, y = percent_difference_of_BHIS, fill = parameter)) +
   geom_col(position = "dodge") +
-  labs(y="percent of 1 um", title="48hrs cell dimensions") +
+  labs(y = "percent of 1 um", title = "48hrs cell dimensions") +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, vjust=1, hjust=1))
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
 
 # Save plot
 ggsave(
@@ -133,8 +140,10 @@ On the basis of this criteria, I will be illustrating the following image:
 
 ```{r}
 # Choose image
-from_experiment <- paste0("~/Documents/Stanford/Huang_lab_rotation/",
-                          "Chow_derived_media/240308_chow_media_comparisons/")
+from_experiment <- paste0(
+  "~/Documents/Stanford/Huang_lab_rotation/",
+  "Chow_derived_media/240308_chow_media_comparisons/"
+)
 from_condition <- "48hrs_snapshots/"
 from_BHIS <- "48hrs_ecoli_BHIS_1.tif"
 from_15chowSD7PB <- "48hrs_ecoli_15chowDS7(PB)_1.tif"
