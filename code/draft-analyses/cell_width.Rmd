@@ -200,15 +200,16 @@ renv::snapshot()
 ## Containerization
 
 ```{r}
+UPDATE_DOCKERFILE <- FALSE
+
 # Only run this if option is set to TRUE
 if (UPDATE_DOCKERFILE) {
   # Create a dockerfile from the session info
   my_dockerfile <- containerit::dockerfile(from = sessionInfo(), env = ls())
   # Write file
   write(my_dockerfile, file = "~/Dockerfile")
+  print(my_dockerfile)
 }
-
-print(my_dockerfile)
 ```
 
 ------------------------------------------------------------------------
